@@ -24,7 +24,8 @@ import java.util.*
 fun NoteCard(
     modifier: Modifier = Modifier,
     note: Note,
-    onNoteClicked: (Note) -> Unit
+    onClickDelete: (Note) -> Unit,
+    onClickDetails: (UUID) -> Unit
 ) {
     Surface(
         modifier = modifier
@@ -37,6 +38,7 @@ fun NoteCard(
         Row(modifier = Modifier.fillMaxWidth()) {
             Column(
                 modifier = modifier
+                    .clickable { onClickDetails(note.id) }
                     .padding(vertical = 6.dp, horizontal = 14.dp)
                     .weight(1f),
                 horizontalAlignment = Alignment.Start
@@ -52,7 +54,7 @@ fun NoteCard(
             Box(modifier = Modifier.align(Alignment.Bottom)) {
                 Icon(
                     modifier = Modifier
-                        .clickable { onNoteClicked(note) }
+                        .clickable { onClickDelete(note) }
                         .padding(12.dp),
                     imageVector = Icons.Default.Delete,
                     tint = Color.Red,
@@ -71,5 +73,7 @@ fun NoteCardPreview() {
         title = "Title",
         description = "Na description vamos colocar um texto bem grande para ver ser le não empura a lixeira para fora"
     ),
-        onNoteClicked = {})
+        onClickDelete = {},
+        onClickDetails = {}
+    )
 }

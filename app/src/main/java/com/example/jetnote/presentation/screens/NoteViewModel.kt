@@ -2,9 +2,7 @@ package com.example.jetnote.presentation.screens
 
 import android.content.ContentValues.TAG
 import android.util.Log
-import androidx.lifecycle.ViewModel
-import androidx.lifecycle.viewModelScope
-import com.example.core.data.NoteRepository
+import androidx.lifecycle.*
 import com.example.core.model.Note
 import com.example.core.usecase.*
 import com.example.core.usecase.base.CoroutinesDispatchers
@@ -14,7 +12,7 @@ import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.asStateFlow
 import kotlinx.coroutines.flow.distinctUntilChanged
 import kotlinx.coroutines.launch
-import java.util.UUID
+import java.util.*
 import javax.inject.Inject
 
 @HiltViewModel
@@ -31,11 +29,32 @@ class NoteViewModel @Inject constructor(
     private val _noteList = MutableStateFlow<List<Note>>(listOf())
     val noteList = _noteList.asStateFlow()
 
-    private val _noteById = MutableStateFlow<Note>(Note( title = "", description = ""))
-    val noteById = _noteList.asStateFlow()
+    private val _noteById = MutableStateFlow<Note>(Note(title = "", description = ""))
+    val noteById = _noteById.asStateFlow()
 
     init {
         getAllNotes()
+    }
+
+    private fun getAllNotes() {
+        viewModelScope.launch(dispatchers.io()) {
+            getNotesUseCase.invoke(Unit)
+                .distinctUntilChanged().collect { listOfNote ->
+                    _noteList.value = listOfNote
+                }
+        }
+    }
+
+    fun getNoteById(id: UUID) {
+        viewModelScope.launch(dispatchers.io()) {
+            getNoteByIdUseCase.invoke(GetNoteByIdUseCase.Params(id)).watchStatus(
+                loading = {},
+                success = {
+                    _noteById.value = it
+                },
+                error = {}
+            )
+        }
     }
 
     fun deleteAllNote() {
@@ -47,6 +66,7 @@ class NoteViewModel @Inject constructor(
             )
         }
     }
+
 
     fun deleteNote(note: Note) {
         viewModelScope.launch(dispatchers.io()) {
@@ -61,31 +81,6 @@ class NoteViewModel @Inject constructor(
                     Log.d(TAG, "addNote: error")
                 }
             )
-        }
-    }
-
-    fun getNoteById(id: UUID) {
-        viewModelScope.launch(dispatchers.io()) {
-            getNoteByIdUseCase.invoke(GetNoteByIdUseCase.Params(id)).watchStatus(
-                loading = {
-                    Log.d(TAG, "addNote: loading")
-                },
-                success = {
-                    _noteById.value = it
-                },
-                error = {
-                    Log.d(TAG, "addNote: error")
-                }
-            )
-        }
-    }
-
-    private fun getAllNotes() {
-        viewModelScope.launch(dispatchers.io()) {
-            getNotesUseCase.invoke(Unit)
-                .distinctUntilChanged().collect { listOfNote ->
-                    _noteList.value = listOfNote
-                }
         }
     }
 
